@@ -5,7 +5,7 @@ from telegram.ext import Application, CommandHandler, CallbackContext
 import asyncio
 import os
 
-from flask import Flask, request
+
 
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
