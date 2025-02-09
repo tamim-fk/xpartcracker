@@ -1,4 +1,94 @@
-   # Command to start the bot and pin a notice
+import json
+import logging
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackContext
+import asyncio
+import os
+from flask import Flask, request
+
+# Enable logging
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Embedded course data
+COURSES_DATA = {
+    "popular": {
+        "price": "Join Main Group",
+        "notice": "🔥 Limited-time offer! Get 20% off if you enroll today.",
+        "courses": [
+            {"name": "Data Science and Big Data", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Machine Learning and AI", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"}
+        ]
+    },
+    "gaming": {
+        "price": "Join Main Group",
+        "notice": "🔥 Limited-time offer! Get 20% off if you enroll today.",
+        "courses": [
+            {"name": "Minecraft", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Among Us", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Stardew Valley", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Terraria", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Fortnite", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"}
+        ]
+    },
+    "autocad": {
+        "price": "Join Main Group",
+        "notice": "💡 Master AutoCAD with hands-on projects!",
+        "courses": [
+            {"name": "AutoCAD for Beginners", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Advanced AutoCAD", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"}
+        ]
+    },
+    "kali": {
+        "price": "Join Main Group",
+        "notice": "💡 Learn Kali Linux from scratch!",
+        "courses": [
+            {"name": "Kali Linux for Beginners", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Advanced Kali Linux", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"}
+        ]
+    },
+    "web": {
+        "price": "Join Main Group",
+        "notice": "💡 Build modern web applications!",
+        "courses": [
+            {"name": "Web Development Bootcamp", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Full Stack Development", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"}
+        ]
+    },
+    "hacking": {
+        "price": "Join Main Group",
+        "notice": "💡 Ethical hacking and cybersecurity fundamentals!",
+        "courses": [
+            {"name": "Ethical Hacking Basics", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Penetration Testing", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"}
+        ]
+    },
+    "python": {
+        "price": "Join Main Group",
+        "notice": "💡 Learn Python with real-world projects!",
+        "courses": [
+            {"name": "Python for Beginners", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"},
+            {"name": "Advanced Python", "link": "https://t.me/+wnrp0WBf_LA1ZjBl"}
+        ]
+    }
+}
+
+# Payment link
+PAYMENT_LINK = "https://t.me/+wnrp0WBf_LA1ZjBl"
+
+# Bot Token
+TELEGRAM_TOKEN = "7941080484:AAFSe6zITZxCjYqFldDLXXN_mm5Y354GCgc"
+
+# Command to start the bot
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text(
+        "🎓 **Welcome to the Course Sharing Bot!** 🎓\n\n"
+        "💡 Get access to high-quality paid courses.\n"
+        "📌 Use /categories to explore available courses."
+        )
+    
+    
+       # Command to start the bot and pin a notice
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text(
         "📌 **Important Notice:**\n"
@@ -18,3 +108,82 @@ async def start(update: Update, context: CallbackContext):
 
         "📂 Explore courses with /categories."
     )
+
+# Command to show categories
+async def categories(update: Update, context: CallbackContext):
+    await update.message.reply_text(
+        "📂 **Available Categories:**\n"
+        "👉 /popular\n"
+        "👉 /gaming\n"
+        "👉 /autocad\n"
+        "👉 /kali\n"
+        "👉 /web\n"
+        "👉 /hacking\n"
+        "👉 /python\n"
+        "\n⚡ Choose a category to see course details."
+    )
+
+# Command to show payment link
+async def payment(update: Update, context: CallbackContext):
+    await update.message.reply_text(
+        f"💳 **Payment Information:**\n"
+        f"👉 [Click here to make a payment]({PAYMENT_LINK})",
+        parse_mode="Markdown"
+    )
+
+# Function to send course details with price and notice
+async def send_courses(update: Update, context: CallbackContext):
+    category = update.message.text.lstrip("/").lower()
+    
+    if category in COURSES_DATA:
+        category_data = COURSES_DATA[category]
+        message = (
+            f"🎯 **{category.capitalize()} Courses** 🎯\n"
+            f"💰 **Price:** {category_data['price']}\n"
+            f"📢 **Notice:** {category_data['notice']}\n\n\n"
+            "⚠️📌**Join The Main Group To Buy Course📌⚠️\n\n\n"
+            "📌 **Course List:**\n"
+        )
+        for course in category_data["courses"]:
+            message += f"🔹 [{course['name']}]({course['link']})\n"
+
+        await update.message.reply_text(message, parse_mode="Markdown")
+    else:
+        await update.message.reply_text("❌ Invalid category. Use /categories to see available options.")
+
+# Flask app to bind to a port
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Telegram bot is running!"
+
+# Main function to run the bot
+def main():
+    # Start the Flask server in a separate thread
+    from threading import Thread
+    flask_thread = Thread(target=lambda: app.run(port=5000, host="0.0.0.0"))
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # Start the Telegram bot
+    telegram_app = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    # Register handlers
+    telegram_app.add_handler(CommandHandler("start", start))
+    telegram_app.add_handler(CommandHandler("categories", categories))
+    telegram_app.add_handler(CommandHandler("payment", payment))
+    telegram_app.add_handler(CommandHandler("popular", send_courses))
+    telegram_app.add_handler(CommandHandler("gaming", send_courses))
+    telegram_app.add_handler(CommandHandler("autocad", send_courses))
+    telegram_app.add_handler(CommandHandler("kali", send_courses))
+    telegram_app.add_handler(CommandHandler("web", send_courses))
+    telegram_app.add_handler(CommandHandler("hacking", send_courses))
+    telegram_app.add_handler(CommandHandler("python", send_courses))
+
+    # Start the bot
+    print("Bot is running...")
+    telegram_app.run_polling()
+
+if __name__ == "__main__":
+    asyncio.run(main())
